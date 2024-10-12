@@ -22,7 +22,7 @@ public class Job {
         doTasks();
         System.out.println("Wait to finish");
         waitFinish();
-        System.out.println("All tasks finished");
+        System.out.println("All tasks finished, result: " + executorJob.getExecuteResult());
     }
 
     private void genTaskInfos(String preferField) {
