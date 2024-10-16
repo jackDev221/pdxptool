@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,6 +15,7 @@ import java.util.Base64;
 import java.util.Random;
 
 
+@Slf4j
 @Data
 @Builder
 public class PDXPData {
@@ -86,7 +88,7 @@ public class PDXPData {
     public static PDXPData decodeFromBase64Str(String input) {
         byte[] inputBytes = Base64.getDecoder().decode(input);
         if (inputBytes.length < 32) {
-            System.out.println("Input string decode result len < 32, wrong input");
+           log.error("Input string decode result len < 32, wrong input");
             return null;
         }
         short mid = ByteBuffer.wrap(inputBytes, 1, 2).order(ByteOrder.BIG_ENDIAN).getShort();

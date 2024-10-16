@@ -1,55 +1,79 @@
 package org.example.job;
 
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.job.task.IBaseTask;
+import org.example.job.worker.PDXPTaskWork;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
+@Slf4j
 public class ExecutorJob {
     private ExecutorService fixedThreadPool;
     private ExecuteInfo executeInfo;
-    private int workers;
+    private int workersNum;
+    private int batchNum;
 
-    private ConcurrentStack<TaskInfo> taskStack = new ConcurrentStack<>();
+    private ConcurrentStack<IBaseTask> currentBatchTasks = new ConcurrentStack<>();
+
+    private ConcurrentStack<IBaseTask> nextBatchTasks;
 
 
-    CountDownLatch latch;
+    private CountDownLatch latch;
 
     public ExecutorJob(int num) {
         int coreSize = Runtime.getRuntime().availableProcessors();
         fixedThreadPool = Executors.newFixedThreadPool(coreSize);
-        workers = num > coreSize ? coreSize : num;
-        latch = new CountDownLatch(workers);
+        workersNum = num > coreSize ? coreSize : num;
         executeInfo = new ExecuteInfo();
     }
 
-    public void addTask(TaskInfo taskInfo) {
-        taskStack.push(taskInfo);
+    public void addTask(IBaseTask taskInfo) {
+        currentBatchTasks.push(taskInfo);
     }
 
     public void submit() {
-        executeInfo.setTaskNum(taskStack.size());
+        executeInfo.setTaskNum(currentBatchTasks.size());
         executeInfo.start();
-        for (int i = 0; i < workers; i++) {
-            final int num = i;
-            fixedThreadPool.submit(() -> {
-                while (!taskStack.isEmpty()) {
-                    TaskInfo taskInfo = taskStack.pop();
-                    if (taskInfo != null) {
-                        System.out.println(num + "  :  " + taskInfo.tokenStr);
-                        executeInfo.getSuccess().incrementAndGet();
-                    }
-                }
-                latch.countDown();
-            });
+        nextBatchTasks = new ConcurrentStack<>();
+        latch = new CountDownLatch(workersNum);
+        for (int i = 0; i < workersNum; i++) {
+            PDXPTaskWork work = new PDXPTaskWork(String.format("index:%d", i), currentBatchTasks,
+                    nextBatchTasks, latch, executeInfo, null);
+            fixedThreadPool.submit(work);
+//            fixedThreadPool.submit(() -> {
+//                while (!currentBatchTasks.isEmpty()) {
+//                    TaskInfo taskInfo = currentBatchTasks.pop();
+//                    if (taskInfo != null) {
+//                        executeInfo.getSuccess().incrementAndGet();
+//                    }
+//                }
+//                latch.countDown();
+//            });
         }
     }
 
     public void waitFinish() {
         try {
-            latch.await();
-            executeInfo.finish();
+            while (true) {
+                latch.await();
+                executeInfo.finish();
+                log.info("taskBatch result: batch: {}, info:{}", batchNum, executeInfo.getResult());
+                if (nextBatchTasks.size() == 0) {
+                    break;
+                }
+                batchNum++;
+                executeInfo.reset();
+                currentBatchTasks = nextBatchTasks;
+                submit();
+            }
+            log.info("finish all batch tasks.");
+
         } catch (Exception e) {
-            System.out.println(e.getStackTrace().toString());
+            e.printStackTrace();
         }
     }
 
