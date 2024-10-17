@@ -7,7 +7,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.example.job.ConcurrentStack;
 import org.example.job.ExecuteInfo;
-import org.example.job.task.Constants;
+import org.example.job.Constants;
 import org.example.job.task.IBaseTask;
 import org.example.job.task.IRequestTask;
 

@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 
 
 @Slf4j
-public class ExecutorJob {
+public class PressJobExecutor {
     private ExecutorService fixedThreadPool;
     private ExecuteInfo executeInfo;
     private int workersNum;
@@ -24,7 +24,7 @@ public class ExecutorJob {
 
     private CountDownLatch latch;
 
-    public ExecutorJob(int num) {
+    public PressJobExecutor(int num) {
         int coreSize = Runtime.getRuntime().availableProcessors();
         fixedThreadPool = Executors.newFixedThreadPool(coreSize);
         workersNum = num > coreSize ? coreSize : num;

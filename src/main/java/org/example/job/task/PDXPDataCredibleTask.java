@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import okhttp3.*;
+import org.example.job.Constants;
 
 import java.util.List;
 
