@@ -10,5 +10,7 @@ public interface IRequestTask extends IBaseTask {
 
     IRequestTask getNextTask(Response currenResponse);
 
+    void closeResponse(Response response);
+
     int getStep();
 }

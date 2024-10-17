@@ -78,4 +78,9 @@ public class PDXPDataCredibleTask implements IRequestTask {
                 .pdxpStr(pdxpStr).build();
     }
 
+    @Override
+    public void closeResponse(Response response) {
+        response.close();
+    }
+
 }

@@ -50,7 +50,9 @@ public class PDXPTaskWork implements IWorker {
                 } else {
                     executeInfo.getFail().incrementAndGet();
                 }
+                iRequestTask.closeResponse(response);
                 IRequestTask nextTask = iRequestTask.getNextTask(response);
+                response.close();
                 addNextTask(nextTask, currentBatchTasks, nextBatchTasks);
             } catch (Exception e) {
                 e.printStackTrace();
