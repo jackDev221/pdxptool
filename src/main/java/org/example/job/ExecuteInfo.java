@@ -36,8 +36,8 @@ public class ExecuteInfo {
     }
 
     public String getResult() {
-        return String.format("TaskNum:%d, success:%d, fail:%d, time cast:%d ms",
-                taskNum, success.get(), fail.get(), endTimeStamp - startTimeStamp);
+        return String.format("TaskNum:%d, success:%d, fail:%d, time cast:%d ms, detail: %d:%d",
+                taskNum, success.get(), fail.get(), endTimeStamp - startTimeStamp, startTimeStamp, endTimeStamp);
     }
 
 }

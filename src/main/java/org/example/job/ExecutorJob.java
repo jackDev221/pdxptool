@@ -42,17 +42,8 @@ public class ExecutorJob {
         latch = new CountDownLatch(workersNum);
         for (int i = 0; i < workersNum; i++) {
             PDXPTaskWork work = new PDXPTaskWork(String.format("index:%d", i), currentBatchTasks,
-                    nextBatchTasks, latch, executeInfo, null);
+                    nextBatchTasks, latch, executeInfo);
             fixedThreadPool.submit(work);
-//            fixedThreadPool.submit(() -> {
-//                while (!currentBatchTasks.isEmpty()) {
-//                    TaskInfo taskInfo = currentBatchTasks.pop();
-//                    if (taskInfo != null) {
-//                        executeInfo.getSuccess().incrementAndGet();
-//                    }
-//                }
-//                latch.countDown();
-//            });
         }
     }
 

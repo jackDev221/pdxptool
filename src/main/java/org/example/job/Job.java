@@ -2,6 +2,7 @@ package org.example.job;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.example.apiinfo.PDXPServerInfo;
 import org.example.data.PDXPData;
 import org.example.job.task.PDXPDataCredibleTask;
 
@@ -22,9 +23,9 @@ public class Job {
         executorJob = new ExecutorJob(workerNums);
     }
 
-    public void doJobs(String preferField) {
+    public void doJobs(String preferField, PDXPServerInfo pdxpServerInfo) {
         log.info(String.format("Start to generate num:%d tasks", taskNums));
-        genTaskInfos(preferField);
+        genTaskInfos(preferField, pdxpServerInfo);
         log.info(String.format("Finish generating num:%d tasks, start to do tasks", taskNums));
         doTasks();
         log.info("Wait to finish");
@@ -32,12 +33,12 @@ public class Job {
         log.info("All tasks finished, result: " + executorJob.getExecuteResult());
     }
 
-    private void genTaskInfos(String preferField) {
+    private void genTaskInfos(String preferField, PDXPServerInfo pdxpServerInfo) {
         for (int i = 0; i < taskNums; i++) {
             PDXPData pdxpData = PDXPData.genPDXPData(preferField);
-            List<String> nextUrls = new ArrayList<>(Arrays.asList("http://127.0.0.1:8080/api/app/orderValidate"));
-            PDXPDataCredibleTask task = new PDXPDataCredibleTask(pdxpData.toBase64Str(), "http://127.0.0.1:8080/api/app/orderEvidence",
-                    nextUrls, "jwt:tesstttt", PDXPDataCredibleTask.STEP_EVIDENCE);
+            List<String> nextUrls = new ArrayList<>(Arrays.asList(pdxpServerInfo.getValidateUrl()));
+            PDXPDataCredibleTask task = new PDXPDataCredibleTask(pdxpData.toBase64Str(), pdxpServerInfo.getEvidenceUrl(),
+                    nextUrls, pdxpServerInfo.getJwt(), PDXPDataCredibleTask.STEP_EVIDENCE);
             executorJob.addTask(task);
         }
     }

@@ -1,33 +1,32 @@
 package org.example.job.worker;
 
 import cn.hutool.core.util.ObjectUtil;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.example.job.ConcurrentStack;
 import org.example.job.ExecuteInfo;
+import org.example.job.task.Constants;
 import org.example.job.task.IBaseTask;
 import org.example.job.task.IRequestTask;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Data
-@AllArgsConstructor
-public class PDXPTaskWork implements IWorker {
-    private String id;
-    private ConcurrentStack<IBaseTask> currentBatchTasks;
-    private ConcurrentStack<IBaseTask> nextBatchTasks;
-    private CountDownLatch latch;
-    private ExecuteInfo executeInfo;
+public class PDXPTaskWork extends BaseWork<Response> {
     private OkHttpClient okHttpClient;
 
+    public PDXPTaskWork(String id, ConcurrentStack currentBatchTasks, ConcurrentStack nextBatchTasks,
+                        CountDownLatch latch, ExecuteInfo executeInfo) {
+        super(id, currentBatchTasks, nextBatchTasks, latch, executeInfo);
+    }
+
+
     @Override
-    public void run() {
+    public Response handleTask(IBaseTask iBaseTask) throws IOException {
         if (ObjectUtil.isNull(okHttpClient)) {
             okHttpClient = new OkHttpClient.Builder()
                     .connectTimeout(3, TimeUnit.SECONDS)
@@ -35,30 +34,24 @@ public class PDXPTaskWork implements IWorker {
                     .readTimeout(5, TimeUnit.SECONDS)
                     .build();
         }
-
-
-        while (!currentBatchTasks.isEmpty()) {
-            try {
-                IRequestTask iRequestTask = (IRequestTask) currentBatchTasks.pop();
-                if (ObjectUtil.isNull(iRequestTask)) {
-                    return;
-                }
-                Request request = iRequestTask.getRequest();
-                Response response = okHttpClient.newCall(request).execute();
-                if (iRequestTask.isResponseExpect(response)) {
-                    executeInfo.getSuccess().incrementAndGet();
-                } else {
-                    executeInfo.getFail().incrementAndGet();
-                }
-                iRequestTask.closeResponse(response);
-                IRequestTask nextTask = iRequestTask.getNextTask(response);
-                response.close();
-                addNextTask(nextTask, currentBatchTasks, nextBatchTasks);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (!iBaseTask.getTaskType().equals(Constants.TASK_TYPE_HTTP_REQUEST)) {
+            log.warn("{} handle a task with wrong type, expect:{}, act:{}", getId(), iBaseTask.getTaskType(), Constants.TASK_TYPE_HTTP_REQUEST);
+            return null;
         }
-        latch.countDown();
+        IRequestTask iRequestTask = (IRequestTask) iBaseTask;
+        Request request = iRequestTask.getRequest();
+        Response response = okHttpClient.newCall(request).execute();
+        return response;
+    }
+
+    @Override
+    public boolean isResultExpect(Response result) {
+        return result.code() == 200;
+    }
+
+    @Override
+    public void handleTaskResult(Response result) {
+        result.close();
     }
 
     @Override

@@ -83,4 +83,24 @@ public class PDXPDataCredibleTask implements IRequestTask {
         response.close();
     }
 
+    @Override
+    public IBaseTask getNextTask(boolean currentTaskResult) {
+
+        int step = getStep() + 1;
+        if (!currentTaskResult || step > STEP_VALIDATE) {
+            return null;
+        }
+        String currentUrl = nextUrls.remove(0);
+        return new PDXPDataCredibleTaskBuilder()
+                .jwtToken(jwtToken)
+                .step(step)
+                .nextUrls(nextUrls)
+                .currentUrl(currentUrl)
+                .pdxpStr(pdxpStr).build();
+    }
+
+    @Override
+    public String getTaskType() {
+        return Constants.TASK_TYPE_HTTP_REQUEST;
+    }
 }

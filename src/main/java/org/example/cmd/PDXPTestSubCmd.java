@@ -1,6 +1,9 @@
 package org.example.cmd;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.example.apiinfo.PDXPServerInfo;
 import org.example.job.Job;
 import picocli.CommandLine;
 
@@ -16,13 +19,17 @@ public class PDXPTestSubCmd implements Runnable {
     @CommandLine.Option(names = {"-p", "--preference"}, description = "preference token field json string.")
     private String preferFieldsJson;
 
+    @CommandLine.Option(names = {"-s", "--serverInfo"}, description = "request server info(url, jwt...).")
+    private String serverInfoStr;
+
 
     @Override
     public void run() {
-        log.info("taskNums:{}, threadNum:{}", taskNums, threadNums);
-        if (taskNums > 0 && threadNums > 0) {
+        log.info("taskNums:{}, threadNum:{},  serverInfoStr:{}", taskNums, threadNums, serverInfoStr);
+        PDXPServerInfo serverInfo = PDXPServerInfo.decodeFromStr(serverInfoStr);
+        if (taskNums > 0 && threadNums > 0 && ObjectUtil.isNotNull(serverInfo)) {
             Job job = new Job(threadNums, taskNums);
-            job.doJobs(preferFieldsJson);
+            job.doJobs(preferFieldsJson, serverInfo);
         }
     }
 }
