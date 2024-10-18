@@ -15,6 +15,9 @@ public class JobInfo {
     private String preferField;
     private int taskNum;
     private int workerNum;
+    private int initialDelay;
+    private int period;
+    private int taskNumPeriod;
     private PDXPServerInfo pdxpServerInfo;
 
     public static JobInfo decodeFromJsonStr(String input) {

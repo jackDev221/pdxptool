@@ -40,4 +40,8 @@ public class ExecuteInfo {
                 taskNum, success.get(), fail.get(), endTimeStamp - startTimeStamp, startTimeStamp, endTimeStamp);
     }
 
+    public boolean isFinished() {
+        return (success.get() + fail.get()) >= taskNum;
+    }
+
 }

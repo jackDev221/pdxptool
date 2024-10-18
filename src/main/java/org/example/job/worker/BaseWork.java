@@ -3,6 +3,7 @@ package org.example.job.worker;
 import cn.hutool.core.util.ObjectUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.checkerframework.checker.units.qual.A;
 import org.example.job.ConcurrentStack;
 import org.example.job.ExecuteInfo;
 import org.example.job.task.IBaseTask;
@@ -50,9 +51,12 @@ public abstract class BaseWork<T> implements IWorker {
                 addNextTask(nextTask, currentBatchTasks, nextBatchTasks);
                 handleTaskResult(result);
             } catch (Exception e) {
+                executeInfo.getFail().incrementAndGet();
                 e.printStackTrace();
             }
         }
-        latch.countDown();
+        if (ObjectUtil.isNotNull(latch)) {
+            latch.countDown();
+        }
     }
 }
