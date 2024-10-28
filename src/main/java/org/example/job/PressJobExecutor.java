@@ -17,6 +17,8 @@ public class PressJobExecutor {
     private int workersNum;
     private int batchNum;
 
+    private long batchInterval;
+
     private ConcurrentStack<IBaseTask> currentBatchTasks = new ConcurrentStack<>();
 
     private ConcurrentStack<IBaseTask> nextBatchTasks;
@@ -24,11 +26,12 @@ public class PressJobExecutor {
 
     private CountDownLatch latch;
 
-    public PressJobExecutor(int num) {
+    public PressJobExecutor(int num, long batchInterval) {
         int coreSize = Runtime.getRuntime().availableProcessors();
         fixedThreadPool = Executors.newFixedThreadPool(coreSize);
         workersNum = num > coreSize ? coreSize : num;
         executeInfo = new ExecuteInfo();
+        this.batchInterval = batchInterval;
     }
 
     public void addTask(IBaseTask taskInfo) {
@@ -59,6 +62,7 @@ public class PressJobExecutor {
                 batchNum++;
                 executeInfo.reset();
                 currentBatchTasks = nextBatchTasks;
+                batchSleep(batchInterval);
                 submit();
             }
             log.info("finish all batch tasks.");
@@ -66,6 +70,12 @@ public class PressJobExecutor {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void batchSleep(long millis) throws InterruptedException {
+        log.info("batch start sleep for {} millis", millis);
+        Thread.sleep(millis);
+        log.info("batch finish sleep for {} millis", millis);
     }
 
     public String getExecuteResult() {

@@ -18,6 +18,7 @@ public class JobInfo {
     private int initialDelay;
     private int period;
     private int taskNumPeriod;
+    private long batchInterval;
     private PDXPServerInfo pdxpServerInfo;
 
     public static JobInfo decodeFromJsonStr(String input) {

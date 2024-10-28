@@ -1,4 +1,5 @@
 package org.example.job;
+
 import lombok.extern.slf4j.Slf4j;
 import org.example.apiinfo.PDXPServerInfo;
 import org.example.data.PDXPData;
@@ -15,9 +16,9 @@ public class PressJob extends BaseJob {
 
     public PressJob(JobInfo jobInfo) {
         super(jobInfo);
-        pressJobExecutor = new PressJobExecutor(jobInfo.getWorkerNum());
-
+        pressJobExecutor = new PressJobExecutor(jobInfo.getWorkerNum(), jobInfo.getBatchInterval());
     }
+
     private void genTaskInfos(int taskNums, String preferField, PDXPServerInfo pdxpServerInfo) {
         for (int i = 0; i < taskNums; i++) {
             PDXPData pdxpData = PDXPData.genPDXPData(preferField);
@@ -28,8 +29,15 @@ public class PressJob extends BaseJob {
         }
     }
 
+    private void beforeTasks(){
+
+    }
     private void doTasks() {
         pressJobExecutor.submit();
+    }
+
+    private void endTasks(){
+
     }
 
     private void waitFinish() {
@@ -42,6 +50,7 @@ public class PressJob extends BaseJob {
         log.info(String.format("Start to generate num:%d tasks", jobInfo.getTaskNum()));
         genTaskInfos(jobInfo.getTaskNum(), jobInfo.getPreferField(), jobInfo.getPdxpServerInfo());
         log.info(String.format("Finish generating num:%d tasks, start to do tasks", jobInfo.getTaskNum()));
+
         doTasks();
         log.info("Wait to finish");
         waitFinish();
