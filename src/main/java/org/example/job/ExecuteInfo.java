@@ -11,6 +11,7 @@ public class ExecuteInfo {
     private long endTimeStamp;
     private AtomicInteger success = new AtomicInteger(0);
     private AtomicInteger fail = new AtomicInteger(0);
+    private long cast;
 
     public ExecuteInfo() {
         init();
@@ -36,12 +37,28 @@ public class ExecuteInfo {
     }
 
     public String getResult() {
-        return String.format("TaskNum:%d, success:%d, fail:%d, time cast:%d ms, detail: %d:%d",
-                taskNum, success.get(), fail.get(), endTimeStamp - startTimeStamp, startTimeStamp, endTimeStamp);
+        return String.format("TaskNum:%d, success:%d, fail:%d, real time cast:%d ms, detail: taskStart %d: taskFinish %d",
+                taskNum, success.get(), fail.get(), getRealCast(), startTimeStamp, endTimeStamp);
+    }
+
+    public long getRealCast() {
+        if (cast == 0) {
+            cast = endTimeStamp - startTimeStamp;
+        }
+        return cast;
     }
 
     public boolean isFinished() {
         return (success.get() + fail.get()) >= taskNum;
+    }
+
+    public void updateByExecuteInfo(ExecuteInfo updateInfo) {
+        if (startTimeStamp == 0) {
+            startTimeStamp = updateInfo.getStartTimeStamp();
+        }
+        endTimeStamp = updateInfo.getEndTimeStamp();
+        taskNum += updateInfo.getTaskNum();
+        cast += updateInfo.getCast();
     }
 
 }

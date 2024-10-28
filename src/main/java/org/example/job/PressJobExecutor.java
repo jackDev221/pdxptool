@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 public class PressJobExecutor {
     private ExecutorService fixedThreadPool;
     private ExecuteInfo executeInfo;
+    private ExecuteInfo finalExecuteInfo;
     private int workersNum;
     private int batchNum;
 
@@ -31,7 +32,22 @@ public class PressJobExecutor {
         fixedThreadPool = Executors.newFixedThreadPool(coreSize);
         workersNum = num > coreSize ? coreSize : num;
         executeInfo = new ExecuteInfo();
+        finalExecuteInfo = new ExecuteInfo();
         this.batchInterval = batchInterval;
+    }
+
+    public void beforeExecutor(IBaseTask iBaseTask) {
+        try {
+            PDXPTaskWork work = new PDXPTaskWork(String.format("index:%d", 0), currentBatchTasks,
+                    nextBatchTasks, latch, executeInfo);
+            work.handleTask(iBaseTask);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void endExecutor() {
+
     }
 
     public void addTask(IBaseTask taskInfo) {
@@ -56,6 +72,7 @@ public class PressJobExecutor {
                 latch.await();
                 executeInfo.finish();
                 log.info("taskBatch result: batch: {}, info:{}", batchNum, executeInfo.getResult());
+                finalExecuteInfo.updateByExecuteInfo(executeInfo);
                 if (nextBatchTasks.size() == 0) {
                     break;
                 }
@@ -79,7 +96,7 @@ public class PressJobExecutor {
     }
 
     public String getExecuteResult() {
-        return executeInfo.getResult();
+        return finalExecuteInfo.getResult();
     }
 
 }

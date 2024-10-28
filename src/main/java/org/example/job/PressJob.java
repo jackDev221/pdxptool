@@ -1,7 +1,6 @@
 package org.example.job;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.apiinfo.PDXPServerInfo;
 import org.example.data.PDXPData;
 import org.example.job.task.PDXPDataCredibleTask;
 
@@ -19,42 +18,51 @@ public class PressJob extends BaseJob {
         pressJobExecutor = new PressJobExecutor(jobInfo.getWorkerNum(), jobInfo.getBatchInterval());
     }
 
-    private void genTaskInfos(int taskNums, String preferField, PDXPServerInfo pdxpServerInfo) {
-        for (int i = 0; i < taskNums; i++) {
-            PDXPData pdxpData = PDXPData.genPDXPData(preferField);
-            List<String> nextUrls = new ArrayList<>(Arrays.asList(pdxpServerInfo.getValidateUrl()));
-            PDXPDataCredibleTask task = new PDXPDataCredibleTask(pdxpData.toBase64Str(), pdxpServerInfo.getEvidenceUrl(),
-                    nextUrls, pdxpServerInfo.getJwt(), PDXPDataCredibleTask.STEP_EVIDENCE);
+    private void genTaskInfos() {
+        log.info(String.format("Start to generate num:%d tasks", jobInfo.getTaskNum()));
+        for (int i = 0; i < jobInfo.getTaskNum(); i++) {
+            PDXPData pdxpData = PDXPData.genPDXPData(jobInfo.getPreferField());
+            List<String> nextUrls = new ArrayList<>(Arrays.asList(jobInfo.getPdxpServerInfo().getValidateUrl()));
+            PDXPDataCredibleTask task = new PDXPDataCredibleTask(pdxpData.toBase64Str(), jobInfo.getPdxpServerInfo().getEvidenceUrl(),
+                    nextUrls, jobInfo.getPdxpServerInfo().getJwt(), PDXPDataCredibleTask.STEP_EVIDENCE);
             pressJobExecutor.addTask(task);
         }
     }
 
-    private void beforeTasks(){
-
+    private void beforeTasks() {
+        log.info("PressJob beforeTasks");
+        PDXPData pdxpData = PDXPData.genPDXPData(jobInfo.getPreferField());
+        List<String> nextUrls = new ArrayList<>(Arrays.asList(jobInfo.getPdxpServerInfo().getValidateUrl()));
+        PDXPDataCredibleTask task = new PDXPDataCredibleTask(pdxpData.toBase64Str(), jobInfo.getPdxpServerInfo().getEvidenceUrl(),
+                nextUrls, jobInfo.getPdxpServerInfo().getJwt(), PDXPDataCredibleTask.STEP_EVIDENCE);
+        pressJobExecutor.beforeExecutor(task);
     }
+
     private void doTasks() {
+        log.info(String.format("Finish generating num:%d tasks, start to do tasks", jobInfo.getTaskNum()));
         pressJobExecutor.submit();
     }
 
-    private void endTasks(){
-
+    private void endTasks() {
+        log.info("PressJob end Task");
+        pressJobExecutor.endExecutor();
     }
 
     private void waitFinish() {
+        log.info("wait to finish");
         pressJobExecutor.waitFinish();
+        log.info("all tasks finish result :{}",pressJobExecutor.getExecuteResult());
+
     }
 
     @Override
     public void doJobs() {
         super.doJobs();
-        log.info(String.format("Start to generate num:%d tasks", jobInfo.getTaskNum()));
-        genTaskInfos(jobInfo.getTaskNum(), jobInfo.getPreferField(), jobInfo.getPdxpServerInfo());
-        log.info(String.format("Finish generating num:%d tasks, start to do tasks", jobInfo.getTaskNum()));
-
+        genTaskInfos();
+        beforeTasks();
         doTasks();
-        log.info("Wait to finish");
         waitFinish();
-        log.info("All tasks finished, result: " + pressJobExecutor.getExecuteResult());
+        endTasks();
     }
 
     @Override
