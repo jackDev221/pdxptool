@@ -108,7 +108,7 @@ public class PDXPDataAdapter extends TypeAdapter<PDXPData> {
         }
         in.endObject();
         if (data == null) {
-            dataLength = 0;
+            dataLength = -1;
         } else {
             dataLength = (short) data.length;
         }
