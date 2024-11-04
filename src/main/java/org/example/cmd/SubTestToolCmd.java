@@ -24,10 +24,5 @@ public class SubTestToolCmd implements Runnable {
             BaseJob job = JobFactory.getJob(jobInfo);
             job.doJobs();
         }
-//        JobInfo jobInfo = JobInfo.decodeFromJsonStr(jobInfoJson);
-//        if (ObjectUtil.isNotNull(jobInfo)) {
-//            BaseJob job = JobFactory.getJob(jobInfo);
-//            job.doJobs();
-//        }
     }
 }

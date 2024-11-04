@@ -40,11 +40,6 @@ public class JobFactory {
             public List<IBaseTask> genTaskList(int num) {
                 List<IBaseTask> iRequestTaskList = new ArrayList<>();
                 for (int i = 0; i < num; i++) {
-//                    PDXPData pdxpData = PDXPData.genPDXPData(schedulePDXPJobInfo.getPreferField());
-//                    PDXPServerInfo pdxpServerInfo = schedulePDXPJobInfo.getPdxpServerInfo();
-//                    List<String> nextUrls = new ArrayList<>(Arrays.asList(pdxpServerInfo.getValidateUrl()));
-//                    PDXPDataCredibleTask task = new PDXPDataCredibleTask(pdxpData.toBase64Str(), pdxpServerInfo.getEvidenceUrl(),
-//                            nextUrls, pdxpServerInfo.getJwt(), PDXPDataCredibleTask.STEP_EVIDENCE);
                     iRequestTaskList.add(schedulePDXPJobInfo.getIBaseTask());
                 }
                 return iRequestTaskList;
