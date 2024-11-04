@@ -1,8 +1,12 @@
 package org.example.job;
 
 import cn.hutool.core.util.ObjectUtil;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-import org.example.job.task.IRequestTask;
+import org.example.job.info.ScheduleJobInfo;
+import org.example.job.info.SchedulePDXPJobInfo;
+import org.example.job.task.IBaseTask;
 import org.example.job.worker.BaseWork;
 
 import java.io.IOException;
@@ -12,15 +16,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Data
+@EqualsAndHashCode(callSuper=false)
 public class ScheduledJob<T> extends BaseJob {
+    private ScheduleJobInfo scheduleJobInfo;
     private ScheduledExecutorService scheduledExecutorService;
     private ITaskProvider iTaskProvider;
     private BaseWork<T> baseWork;
     private int successNum;
     private int failNum;
 
-    public ScheduledJob(JobInfo jobInfo, BaseWork<T> baseWork, ITaskProvider iTaskProvider) {
-        super(jobInfo);
+    public ScheduledJob(SchedulePDXPJobInfo scheduleJobInfo, BaseWork<T> baseWork, ITaskProvider iTaskProvider) {
+        this.scheduleJobInfo = scheduleJobInfo;
         this.successNum = 0;
         this.failNum = 0;
         this.baseWork = baseWork;
@@ -45,8 +52,8 @@ public class ScheduledJob<T> extends BaseJob {
             }
             scheduledExecutorService.scheduleAtFixedRate(
                     () -> {
-                        List<IRequestTask> requestTasks = iTaskProvider.genTaskList(jobInfo.getTaskNumPeriod());
-                        for (IRequestTask requestTask : requestTasks) {
+                        List<IBaseTask> requestTasks = iTaskProvider.genTaskList(scheduleJobInfo.getTaskNumPeriod());
+                        for (IBaseTask requestTask : requestTasks) {
                             try {
                                 T result = baseWork.handleTask(requestTask);
                                 boolean isExpect = baseWork.isResultExpect(result);
@@ -63,10 +70,11 @@ public class ScheduledJob<T> extends BaseJob {
                             }
                             if (baseWork.getExecuteInfo().isFinished()) {
                                 baseWork.getLatch().countDown();
+                                return;
                             }
                         }
                     },
-                    jobInfo.getInitialDelay(), jobInfo.getPeriod(), TimeUnit.SECONDS);
+                    scheduleJobInfo.getInitialDelay(), scheduleJobInfo.getPeriod(), TimeUnit.SECONDS);
             baseWork.getLatch().await();
             log.info("finish scheduled job ");
         } catch (Exception e) {
@@ -76,10 +84,10 @@ public class ScheduledJob<T> extends BaseJob {
 
     @Override
     public String getType() {
-        return Constants.JOB_TYPE_SCHEDULED;
+        return Constants.JOB_TYPE_SCHEDULED_PDXP;
     }
 
     interface ITaskProvider {
-        List<IRequestTask> genTaskList(int num);
+        List<IBaseTask> genTaskList(int num);
     }
 }

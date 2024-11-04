@@ -6,7 +6,7 @@ import picocli.CommandLine;
 
 @Slf4j
 @picocli.CommandLine.Command(name = "datatool", mixinStandardHelpOptions = true, description = "PDXP data tool.")
-public class PDXPDataSubCmd implements Runnable {
+public class SubPDXPDataCmd implements Runnable {
     @CommandLine.Option(names = {"-g", "--generate"},
             description = "Generate PDXP data.")
     private boolean[] gen = new boolean[0];

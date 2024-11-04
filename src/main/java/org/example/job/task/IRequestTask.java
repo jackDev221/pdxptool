@@ -8,8 +8,6 @@ public interface IRequestTask extends IBaseTask {
 
     boolean isResponseExpect(Response response);
 
-    IRequestTask getNextTask(Response currenResponse);
-
     void closeResponse(Response response);
 
     int getStep();

@@ -9,6 +9,7 @@ import okhttp3.*;
 import org.example.job.Constants;
 
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @Builder
@@ -64,10 +65,10 @@ public class PDXPDataCredibleTask implements IRequestTask {
         return response.code() == 200;
     }
 
-    @Override
     public IRequestTask getNextTask(Response currenResponse) {
         int step = getStep() + 1;
-        if (!isResponseExpect(currenResponse) || step > STEP_VALIDATE) {
+        if (Objects.isNull(nextUrls) || nextUrls.isEmpty() ||
+                !isResponseExpect(currenResponse) || step > STEP_VALIDATE) {
             return null;
         }
         String currentUrl = nextUrls.remove(0);
@@ -88,7 +89,7 @@ public class PDXPDataCredibleTask implements IRequestTask {
     public IBaseTask getNextTask(boolean currentTaskResult) {
 
         int step = getStep() + 1;
-        if (!currentTaskResult || step > STEP_VALIDATE) {
+        if (Objects.isNull(nextUrls) || nextUrls.isEmpty() || !currentTaskResult || step > STEP_VALIDATE) {
             return null;
         }
         String currentUrl = nextUrls.remove(0);
